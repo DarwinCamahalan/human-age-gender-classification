@@ -4,7 +4,7 @@ from datetime import datetime
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-import csv
+import json
 
 class FaceApp:
     def __init__(self, root):
@@ -54,11 +54,23 @@ class FaceApp:
         self.capture_interval = 10  # seconds
         self.start_time = datetime.now()
 
-        # Open the CSV file for writing
-        self.csv_file = open("log.csv", mode="w", newline="")
-        self.csv_writer = csv.writer(self.csv_file)
-        # Write the header to the CSV file
-        self.csv_writer.writerow(["Date", "Time", "Gender", "Age", "Image Filename"])
+        # Create the output folder if it doesn't exist
+        os.makedirs("images_captured", exist_ok=True)
+
+        # Open the JSON file for writing in append mode
+        self.json_file = "log.json"
+
+        # Create a TreeView for the Logs tab
+        self.log_tree = ttk.Treeview(self.logs_tab, columns=("Date", "Time", "Gender", "Age", "Image Filename"), show="headings")
+        self.log_tree.heading("Date", text="Date")
+        self.log_tree.heading("Time", text="Time")
+        self.log_tree.heading("Gender", text="Gender")
+        self.log_tree.heading("Age", text="Age")
+        self.log_tree.heading("Image Filename", text="Image Filename")
+        self.log_tree.pack(fill="both", expand=True)
+
+        # Display existing data from the JSON file
+        self.display_logs_realtime()
 
         # Start the main update loop
         self.update()
@@ -101,8 +113,16 @@ class FaceApp:
                 image_path = os.path.join("images_captured", image_name)
                 cv2.imwrite(image_path, frame)
 
-                # Log to CSV file
-                self.csv_writer.writerow([date_str, time_str, gender, age, image_name])
+                # Log to JSON file
+                with open(self.json_file, 'a') as jsonfile:
+                    json.dump({
+                        "Date": date_str,
+                        "Time": time_str,
+                        "Gender": gender,
+                        "Age": age,
+                        "Image Filename": image_name
+                    }, jsonfile)
+                    jsonfile.write('\n')
 
                 # Print age and gender information
                 print(f"Gender: {gender}, Age: {age} - Image saved: {image_path}")
@@ -131,6 +151,9 @@ class FaceApp:
         if (current_time - self.start_time).seconds >= self.capture_interval:
             self.capture()
             self.start_time = current_time
+
+            # Update TreeView with newly captured data
+            self.display_logs_realtime()
 
         # Display the frame using Tkinter
         ret, frame = self.vid.read()
@@ -168,14 +191,28 @@ class FaceApp:
 
         self.root.after(10, self.update)
 
+    def display_logs_realtime(self):
+        # Clear existing data from the TreeView
+        for item in self.log_tree.get_children():
+            self.log_tree.delete(item)
+
+        try:
+            with open(self.json_file) as jsonfile:
+                # Read all lines into a list and reverse it
+                lines = jsonfile.readlines()[::-1]
+
+                # Display data
+                for line in lines:
+                    data = json.loads(line)
+                    self.log_tree.insert("", "end", values=(
+                        data["Date"], data["Time"], data["Gender"], data["Age"], data["Image Filename"]
+                    ))
+        except json.JSONDecodeError:
+            tk.Label(self.logs_tab, text="No data available", relief='ridge', width=20).pack(side=tk.LEFT)
+
     def __del__(self):
         if self.vid.isOpened():
             self.vid.release()
-        # Close the CSV file
-        self.csv_file.close()
-
-# Create the output folder if it doesn't exist
-os.makedirs("images_captured", exist_ok=True)
 
 root = tk.Tk()
 app = FaceApp(root)
