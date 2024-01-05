@@ -1,19 +1,37 @@
 import cv2
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+import csv
 
 class FaceApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Human Age and Gender Classification")
-        self.video_source = 0  # Set the video source (you may need to change this)
+
+        # Initialize tabs
+        self.tabControl = ttk.Notebook(root)
+        self.logs_tab = ttk.Frame(self.tabControl)
+        self.graphs_tab = ttk.Frame(self.tabControl)
+        self.images_captured_tab = ttk.Frame(self.tabControl)
+        self.realtime_video_tab = ttk.Frame(self.tabControl)
+
+        self.tabControl.add(self.logs_tab, text="Logs")
+        self.tabControl.add(self.graphs_tab, text="Graphs")
+        self.tabControl.add(self.images_captured_tab, text="Images Captured")
+        self.tabControl.add(self.realtime_video_tab, text="Realtime Video")
+
+        self.tabControl.pack(expand=1, fill="both")
+
+        # Set the video source (you may need to change this)
+        self.video_source = 0
         self.vid = cv2.VideoCapture(self.video_source)
 
-        self.canvas = tk.Canvas(root, width=self.vid.get(cv2.CAP_PROP_FRAME_WIDTH), height=self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.canvas.pack()
+        # Realtime Video tab UI
+        self.canvas_realtime_video = tk.Canvas(self.realtime_video_tab, width=1366, height=768)
+        self.canvas_realtime_video.pack()
 
         self.faceProto = "opencv_face_detector.pbtxt"
         self.faceModel = "opencv_face_detector_uint8.pb"
@@ -27,15 +45,22 @@ class FaceApp:
         self.genderNet = cv2.dnn.readNet(self.genderModel, self.genderProto)
 
         self.MODEL_MEAN_VALUES = (78.4263377603, 87.7689143744, 114.895847746)
-        self.ageList = ['(11-15)', '(16-20)', '(21-25)', '(26-30)', '(31-35)', '(36-40)', '(41-45)', '(46-50)', '(51-55)']
+        self.ageList = ['11-15', '16-20', '21-25', '26-30', '31-35', '36-40', '(41-45)', '(46-50)', '(51-55)']
         self.genderList = ['Male', 'Female']
 
         self.padding = 20
         self.line_margin = 5
 
-        self.capture_interval = 5  # seconds
+        self.capture_interval = 10  # seconds
         self.start_time = datetime.now()
 
+        # Open the CSV file for writing
+        self.csv_file = open("log.csv", mode="w", newline="")
+        self.csv_writer = csv.writer(self.csv_file)
+        # Write the header to the CSV file
+        self.csv_writer.writerow(["Date", "Time", "Gender", "Age", "Image Filename"])
+
+        # Start the main update loop
         self.update()
         self.root.mainloop()
 
@@ -69,10 +94,15 @@ class FaceApp:
                             cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
 
                 # Save captured image with face detection and labels
-                now = datetime.now().strftime("%Y%m%d%H%M%S")
-                image_name = f"captured_{i}_{now}.png"
+                now = datetime.now()
+                date_str = now.strftime("%m/%d/%Y")
+                time_str = now.strftime("%I:%M %p")
+                image_name = f"captured_{i}_{now.strftime('%Y%m%d%H%M%S')}.png"
                 image_path = os.path.join("images_captured", image_name)
                 cv2.imwrite(image_path, frame)
+
+                # Log to CSV file
+                self.csv_writer.writerow([date_str, time_str, gender, age, image_name])
 
                 # Print age and gender information
                 print(f"Gender: {gender}, Age: {age} - Image saved: {image_path}")
@@ -96,6 +126,13 @@ class FaceApp:
         return frame, bboxs
 
     def update(self):
+        # Check if it's time to capture
+        current_time = datetime.now()
+        if (current_time - self.start_time).seconds >= self.capture_interval:
+            self.capture()
+            self.start_time = current_time
+
+        # Display the frame using Tkinter
         ret, frame = self.vid.read()
         if ret:
             frame = cv2.flip(frame, 1)  # Horizontal flip
@@ -126,21 +163,16 @@ class FaceApp:
                 cv2.putText(frame, label_age, (bbox[0], bbox[3] + text_size_gender[1] + text_size_age[1] + 2 * self.line_margin),
                             cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
 
-            # Display the frame using Tkinter
-            self.photo = ImageTk.PhotoImage(image=Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
-            self.canvas.create_image(0, 0, image=self.photo, anchor=tk.NW)
-
-            # Check if it's time to capture
-            current_time = datetime.now()
-            if (current_time - self.start_time).seconds >= self.capture_interval:
-                self.capture()
-                self.start_time = current_time
+            self.photo_realtime_video = ImageTk.PhotoImage(image=Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
+            self.canvas_realtime_video.create_image(0, 0, image=self.photo_realtime_video, anchor=tk.NW)
 
         self.root.after(10, self.update)
 
     def __del__(self):
         if self.vid.isOpened():
             self.vid.release()
+        # Close the CSV file
+        self.csv_file.close()
 
 # Create the output folder if it doesn't exist
 os.makedirs("images_captured", exist_ok=True)
