@@ -8,6 +8,9 @@ import json
 
 class FaceApp:
     def __init__(self, root):
+        self.sort_column = None
+        self.sort_direction = None
+
         self.root = root
         self.root.title("Human Age and Gender Classification")
 
@@ -30,7 +33,7 @@ class FaceApp:
         self.vid = cv2.VideoCapture(self.video_source)
 
         # Realtime Video tab UI
-        self.canvas_realtime_video = tk.Canvas(self.realtime_video_tab, width=1366, height=768)
+        self.canvas_realtime_video = tk.Canvas(self.realtime_video_tab, width=720, height=720)
         self.canvas_realtime_video.pack()
 
         self.faceProto = "opencv_face_detector.pbtxt"
@@ -61,12 +64,11 @@ class FaceApp:
         self.json_file = "log.json"
 
         # Create a TreeView for the Logs tab
-        self.log_tree = ttk.Treeview(self.logs_tab, columns=("Date", "Time", "Gender", "Age", "Image Filename"), show="headings")
+        self.log_tree = ttk.Treeview(self.logs_tab, columns=("Date", "Time", "Gender", "Age"), show="headings")
         self.log_tree.heading("Date", text="Date")
         self.log_tree.heading("Time", text="Time")
         self.log_tree.heading("Gender", text="Gender")
         self.log_tree.heading("Age", text="Age")
-        self.log_tree.heading("Image Filename", text="Image Filename")
         self.log_tree.pack(fill="both", expand=True)
 
         # Display existing data from the JSON file
@@ -142,7 +144,7 @@ class FaceApp:
                 x2 = int(detection[0, 0, i, 5] * frameWidth)
                 y2 = int(detection[0, 0, i, 6] * frameHeight)
                 bboxs.append([x1, y1, x2, y2])
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)  # Set box color to red (BGR: 0, 0, 255)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 1)  # Set box color to red (BGR: 0, 0, 255)
         return frame, bboxs
 
     def update(self):
@@ -205,10 +207,44 @@ class FaceApp:
                 for line in lines:
                     data = json.loads(line)
                     self.log_tree.insert("", "end", values=(
-                        data["Date"], data["Time"], data["Gender"], data["Age"], data["Image Filename"]
+                        data["Date"], data["Time"], data["Gender"], data["Age"]
                     ))
         except json.JSONDecodeError:
             tk.Label(self.logs_tab, text="No data available", relief='ridge', width=20).pack(side=tk.LEFT)
+
+        # Add sorting functionality to the headers
+        for col in ["Date", "Time", "Gender", "Age"]:
+            self.log_tree.heading(col, text=col, command=lambda c=col: self.sort_logs(c))
+
+        # Center-align text in the TreeView
+        for col in ["Date", "Time", "Gender", "Age"]:
+            self.log_tree.column(col, anchor=tk.CENTER)
+
+    def sort_logs(self, column):
+        if column in ["Date", "Time", "Gender", "Age"]:
+            current_data = [(self.log_tree.set(item, "Date"), self.log_tree.set(item, "Time"),
+                            self.log_tree.set(item, "Gender"), self.log_tree.set(item, "Age"), item)
+                            for item in self.log_tree.get_children('')]
+
+            # Determine the sort direction
+            if self.sort_column == column:
+                self.sort_direction = "asc" if self.sort_direction == "desc" else "desc"
+            else:
+                self.sort_direction = "asc"
+
+            # Sort the data
+            current_data.sort(key=lambda x: x[["Date", "Time", "Gender", "Age"].index(column)],
+                            reverse=(self.sort_direction == "desc"))
+
+            # Rearrange items in the TreeView based on the sorted data
+            for index, (date, time, gender, age, item) in enumerate(current_data):
+                self.log_tree.move(item, '', index)
+
+            # Update the sort column
+            self.sort_column = column
+        else:
+            print(f"Ignore sorting for the column: {column}")
+
 
     def __del__(self):
         if self.vid.isOpened():
