@@ -5,6 +5,8 @@ import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 import json
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class FaceApp:
     def __init__(self, root):
@@ -48,7 +50,7 @@ class FaceApp:
         self.genderNet = cv2.dnn.readNet(self.genderModel, self.genderProto)
 
         self.MODEL_MEAN_VALUES = (78.4263377603, 87.7689143744, 114.895847746)
-        self.ageList = ['11-15', '16-20', '21-25', '26-30', '31-35', '36-40', '(41-45)', '(46-50)', '(51-55)']
+        self.ageList = ['11-15', '16-20', '21-25', '26-30', '31-35', '36-40', '41-45', '46-50', '51-55']
         self.genderList = ['Male', 'Female']
 
         self.padding = 20
@@ -147,7 +149,84 @@ class FaceApp:
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 1)  # Set box color to red (BGR: 0, 0, 255)
         return frame, bboxs
 
+    def display_graphs(self):
+        try:
+            with open(self.json_file) as jsonfile:
+                data = jsonfile.readlines()
+
+                # Check if data is empty
+                if not data:
+                    # Clear previous widgets
+                    self.clear_graphs_tab()
+
+                    tk.Label(self.graphs_tab, text="No data available for graphs", relief='ridge', width=20).pack(side=tk.LEFT)
+                    return
+
+                # Extract age and gender data from the JSON file
+                age_data = [json.loads(line)["Age"] for line in data]
+                gender_data = [json.loads(line)["Gender"] for line in data]
+
+                # Count the occurrences of each age range and gender
+                age_counts = {age_range: age_data.count(age_range) for age_range in self.ageList}
+                gender_counts = {gender: gender_data.count(gender) for gender in self.genderList}
+
+                # Combine age ranges with the same percentage value
+                combined_age_ranges = {}
+                for age_range, count in age_counts.items():
+                    if count not in combined_age_ranges:
+                        combined_age_ranges[count] = [age_range]
+                    else:
+                        combined_age_ranges[count].append(age_range)
+
+                # Convert to a list of strings
+                age_labels = [", ".join(sorted(age_ranges)) for age_ranges in combined_age_ranges.values()]
+
+                # Create the figure for both pie charts
+                if not hasattr(self, 'figure'):
+                    self.figure, (self.age_ax, self.gender_ax) = plt.subplots(1, 2, figsize=(12, 6))
+                    self.canvas = FigureCanvasTkAgg(self.figure, master=self.graphs_tab)
+                    self.canvas_widget = self.canvas.get_tk_widget()
+                    self.canvas_widget.pack(fill=tk.BOTH, expand=True)
+
+                # Update the age range pie chart data
+                self.age_ax.clear()
+                self.age_ax.pie(combined_age_ranges.keys(), labels=age_labels, autopct='%1.1f%%', startangle=90)
+                self.age_ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+                self.age_ax.set_title("Age Range Percentage")
+
+                # Update the gender pie chart data
+                self.gender_ax.clear()
+                self.gender_ax.pie(gender_counts.values(), labels=self.genderList, autopct='%1.1f%%', startangle=90)
+                self.gender_ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+                self.gender_ax.set_title("Gender Percentage")
+
+                # Update the display
+                self.canvas.draw()
+
+                # Remove the label if it exists
+                for widget in self.graphs_tab.winfo_children():
+                    if isinstance(widget, tk.Label) and widget.cget("text") == "No data available for graphs":
+                        widget.destroy()
+
+        except (json.JSONDecodeError, FileNotFoundError):
+            # Clear previous widgets
+            self.clear_graphs_tab()
+
+            tk.Label(self.graphs_tab, text="Error reading or no data in JSON file", relief='ridge', width=20).pack(side=tk.LEFT)
+
+    
+    def clear_graphs_tab(self):
+        # Clear all widgets in the graphs_tab
+        for widget in self.graphs_tab.winfo_children():
+            widget.destroy()
+
+        # Close any existing figures
+        plt.close('all')
+        
     def update(self):
+        # Update the pie chart periodically
+        self.display_graphs()
+        
         # Check if it's time to capture
         current_time = datetime.now()
         if (current_time - self.start_time).seconds >= self.capture_interval:
