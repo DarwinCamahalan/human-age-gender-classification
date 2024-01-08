@@ -35,7 +35,7 @@ class FaceApp:
         self.vid = cv2.VideoCapture(self.video_source)
 
         # Realtime Video tab UI
-        self.canvas_realtime_video = tk.Canvas(self.realtime_video_tab, width=720, height=720)
+        self.canvas_realtime_video = tk.Canvas(self.realtime_video_tab, width=800, height=600)
         self.canvas_realtime_video.pack()
 
         self.faceProto = "opencv_face_detector.pbtxt"
@@ -58,6 +58,14 @@ class FaceApp:
 
         self.capture_interval = 10  # seconds
         self.start_time = datetime.now()
+        
+        # Create a Canvas for displaying images in the Images Captured tab
+        self.canvas_images_captured = tk.Canvas(self.images_captured_tab, width=800, height=600)
+        self.canvas_images_captured.pack()
+        
+        # Add these lines to initialize current_page and total_pages
+        self.current_page = 0
+        self.total_pages = 1  # Initialize with 1, update later in the method
 
         # Create the output folder if it doesn't exist
         os.makedirs("images_captured", exist_ok=True)
@@ -76,10 +84,71 @@ class FaceApp:
         # Display existing data from the JSON file
         self.display_logs_realtime()
 
+        # Display existing images in the Images Captured tab
+        self.display_captured_images()
+
         # Start the main update loop
         self.update()
         self.root.mainloop()
 
+    def display_captured_images(self):
+        # Get the list of image files in the "images_captured" folder
+        image_folder = "images_captured"
+        image_files = [f for f in os.listdir(image_folder) if f.endswith(".png")]
+
+        # Clear the Canvas
+        self.canvas_images_captured.delete("all")
+
+        # Paginate the images
+        images_per_page = 10
+        self.total_pages = (len(image_files) + images_per_page - 1) // images_per_page  # Update total_pages
+
+        # Calculate the canvas size based on the number of rows and columns
+        canvas_width = 800
+        canvas_height = 600
+        image_size = min(canvas_width // 5, canvas_height // 2)  # Adjusted image size
+
+        # Display images on the Canvas for the current page
+        for i in range(self.current_page * images_per_page, min((self.current_page + 1) * images_per_page, len(image_files))):
+            image_file = image_files[i]
+            image_path = os.path.join(image_folder, image_file)
+            img = Image.open(image_path)
+            img = img.resize((image_size, image_size), Image.NEAREST)
+            photo = ImageTk.PhotoImage(img)
+
+            # Calculate grid position
+            row_position = (i % images_per_page) // 5
+            col_position = (i % images_per_page) % 5
+
+            # Create a label to hold the image and add it to the Canvas
+            label = tk.Label(self.canvas_images_captured, image=photo)
+            label.image = photo
+            label.grid(row=row_position, column=col_position, padx=5, pady=5)
+
+        # Add pagination buttons
+        prev_button = tk.Button(self.canvas_images_captured, text="Previous", command=self.prev_page)
+        prev_button.grid(row=2, column=0, padx=10, pady=10, columnspan=2)
+
+        next_button = tk.Button(self.canvas_images_captured, text="Next", command=self.next_page)
+        next_button.grid(row=2, column=3, padx=10, pady=10, columnspan=2)
+
+        # Update canvas size to fit the layout
+        self.canvas_images_captured.config(width=canvas_width, height=canvas_height)
+
+
+
+    def prev_page(self):
+        # Move to the previous page
+        self.current_page = max(self.current_page - 1, 0)
+        self.display_captured_images()
+
+    def next_page(self):
+        # Move to the next page
+        self.current_page = min(self.current_page + 1, self.total_pages - 1)
+        self.display_captured_images()
+
+
+    
     def capture(self):
         ret, frame = self.vid.read()
         if ret:
@@ -130,6 +199,7 @@ class FaceApp:
 
                 # Print age and gender information
                 print(f"Gender: {gender}, Age: {age} - Image saved: {image_path}")
+            self.display_captured_images()
 
     def faceBox(self, frame):
         frameWidth = frame.shape[1]
