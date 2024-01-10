@@ -35,8 +35,24 @@ class FaceApp:
         self.vid = cv2.VideoCapture(self.video_source)
 
         # Realtime Video tab UI
-        self.canvas_realtime_video = tk.Canvas(self.realtime_video_tab, width=800, height=600)
+        canvas_width = 1200  # Set your desired width
+        canvas_height = 900  # Set your desired height
+        self.canvas_realtime_video = tk.Canvas(self.realtime_video_tab, width=canvas_width, height=canvas_height)
         self.canvas_realtime_video.pack()
+
+        # Get the window width and height
+        window_width = self.root.winfo_reqwidth()
+        window_height = self.root.winfo_reqheight()
+
+        # Place the canvas in the middle
+        x = (window_width - canvas_width) // 2
+        y = (window_height - canvas_height) // 2
+
+        # Place the canvas in the middle, taking into account the canvas size
+        self.canvas_realtime_video.place(x=x, y=y)
+
+
+
 
         self.faceProto = "opencv_face_detector.pbtxt"
         self.faceModel = "opencv_face_detector_uint8.pb"
@@ -293,10 +309,16 @@ class FaceApp:
         # Close any existing figures
         plt.close('all')
         
+        
+        
     def update(self):
+        # Set canvas dimensions
+        canvas_width = 800  # Set your desired width
+        canvas_height = 600  # Set your desired height
+
         # Update the pie chart periodically
         self.display_graphs()
-        
+
         # Check if it's time to capture
         current_time = datetime.now()
         if (current_time - self.start_time).seconds >= self.capture_interval:
@@ -315,7 +337,7 @@ class FaceApp:
             # Display the live video with labels
             for bbox in bboxs:
                 face = frame[max(0, bbox[1] - self.padding):min(bbox[3] + self.padding, frame.shape[0] - 1),
-                       max(0, bbox[0] - self.padding):min(bbox[2] + self.padding, frame.shape[1] - 1)]
+                    max(0, bbox[0] - self.padding):min(bbox[2] + self.padding, frame.shape[1] - 1)]
 
                 blob = cv2.dnn.blobFromImage(face, 1.0, (227, 227), self.MODEL_MEAN_VALUES, swapRB=False)
                 self.genderNet.setInput(blob)
@@ -337,10 +359,32 @@ class FaceApp:
                 cv2.putText(frame, label_age, (bbox[0], bbox[3] + text_size_gender[1] + text_size_age[1] + 2 * self.line_margin),
                             cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
 
-            self.photo_realtime_video = ImageTk.PhotoImage(image=Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
+            # Resize the frame
+            resized_frame = cv2.resize(frame, (canvas_width, canvas_height))
+
+            # Convert the resized frame to RGB format
+            rgb_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
+
+            # Create a PhotoImage object from the resized frame
+            self.photo_realtime_video = ImageTk.PhotoImage(image=Image.fromarray(rgb_frame))
+
+            # Update the canvas with the resized frame
             self.canvas_realtime_video.create_image(0, 0, image=self.photo_realtime_video, anchor=tk.NW)
 
+            # Get the window width and height
+            window_width = self.root.winfo_reqwidth()
+            window_height = self.root.winfo_reqheight()
+
+            # Place the canvas in the middle
+            x = (window_width - canvas_width) // 2
+            y = (window_height - canvas_height) // 2
+
+            # Place the canvas in the middle, taking into account the canvas size
+            self.canvas_realtime_video.place(x=x, y=y)
+
         self.root.after(10, self.update)
+
+
 
     def display_logs_realtime(self):
         # Clear existing data from the TreeView
