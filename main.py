@@ -76,7 +76,7 @@ class FaceApp:
         self.start_time = datetime.now()
         
         # Create a Canvas for displaying images in the Images Captured tab
-        self.canvas_images_captured = tk.Canvas(self.images_captured_tab, width=800, height=600)
+        self.canvas_images_captured = tk.Canvas(self.images_captured_tab, width=1200, height=900)
         self.canvas_images_captured.pack()
         
         # Add these lines to initialize current_page and total_pages
@@ -107,6 +107,8 @@ class FaceApp:
         self.update()
         self.root.mainloop()
 
+
+
     def display_captured_images(self):
         # Get the list of image files in the "images_captured" folder
         image_folder = "images_captured"
@@ -116,16 +118,27 @@ class FaceApp:
         self.canvas_images_captured.delete("all")
 
         # Paginate the images
-        images_per_page = 10
+        images_per_page = 15
         self.total_pages = (len(image_files) + images_per_page - 1) // images_per_page  # Update total_pages
 
         # Calculate the canvas size based on the number of rows and columns
-        canvas_width = 800
-        canvas_height = 600
+        canvas_width = 1200
+        canvas_height = 900
         image_size = min(canvas_width // 5, canvas_height // 2)  # Adjusted image size
 
-        # Display images on the Canvas for the current page
-        for i in range(self.current_page * images_per_page, min((self.current_page + 1) * images_per_page, len(image_files))):
+        # Create a frame for the displayed images
+        image_frame = tk.Frame(self.canvas_images_captured)
+        image_frame.grid(row=0, column=0, padx=10, pady=10)
+
+        # Display images on the frame for the current page
+        start_index = self.current_page * images_per_page
+        end_index = min((self.current_page + 1) * images_per_page, len(image_files))
+
+        # Destroy labels from the previous page
+        for widget in image_frame.winfo_children():
+            widget.destroy()
+
+        for i in range(start_index, end_index):
             image_file = image_files[i]
             image_path = os.path.join(image_folder, image_file)
             img = Image.open(image_path)
@@ -136,20 +149,35 @@ class FaceApp:
             row_position = (i % images_per_page) // 5
             col_position = (i % images_per_page) % 5
 
-            # Create a label to hold the image and add it to the Canvas
-            label = tk.Label(self.canvas_images_captured, image=photo)
+            # Create a label to hold the image and add it to the frame
+            label = tk.Label(image_frame, image=photo)
             label.image = photo
             label.grid(row=row_position, column=col_position, padx=5, pady=5)
 
-        # Add pagination buttons
-        prev_button = tk.Button(self.canvas_images_captured, text="Previous", command=self.prev_page)
-        prev_button.grid(row=2, column=0, padx=10, pady=10, columnspan=2)
+        # Create a container for pagination buttons in a separate frame
+        button_frame = tk.Frame(self.canvas_images_captured)
+        button_frame.grid(row=1, column=0, padx=10, pady=10)
 
-        next_button = tk.Button(self.canvas_images_captured, text="Next", command=self.next_page)
-        next_button.grid(row=2, column=3, padx=10, pady=10, columnspan=2)
+        # Add pagination buttons in the container
+        prev_button = tk.Button(button_frame, text="Previous", command=self.prev_page)
+        prev_button.grid(row=0, column=0, padx=10)
+
+        next_button = tk.Button(button_frame, text="Next", command=self.next_page)
+        next_button.grid(row=0, column=1, padx=10)
 
         # Update canvas size to fit the layout
         self.canvas_images_captured.config(width=canvas_width, height=canvas_height)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
