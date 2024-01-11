@@ -16,8 +16,25 @@ class FaceApp:
         self.root = root
         self.root.title("Human Age and Gender Classification")
 
+        # Create a style to hide the tab header
+        style = ttk.Style()
+        style.layout("TNotebook.Tab", [])  # Hide the tab header
+
+        # Create a frame to contain the ttk.Notebook and the sidebar
+        self.main_frame = tk.Frame(root)
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Create a sidebar using ttk.Treeview
+        self.sidebar = ttk.Treeview(self.main_frame, selectmode='browse')
+        self.sidebar.insert("", "end", text="Logs", values=("Logs",))
+        self.sidebar.insert("", "end", text="Graphs", values=("Graphs",))
+        self.sidebar.insert("", "end", text="Images Captured", values=("Images Captured",))
+        self.sidebar.insert("", "end", text="Realtime Video", values=("Realtime Video",))
+        self.sidebar.bind("<ButtonRelease-1>", self.switch_tab)
+        self.sidebar.pack(side=tk.LEFT, fill=tk.Y)
+
         # Initialize tabs
-        self.tabControl = ttk.Notebook(root)
+        self.tabControl = ttk.Notebook(self.main_frame)
         self.logs_tab = ttk.Frame(self.tabControl)
         self.graphs_tab = ttk.Frame(self.tabControl)
         self.images_captured_tab = ttk.Frame(self.tabControl)
@@ -28,7 +45,8 @@ class FaceApp:
         self.tabControl.add(self.images_captured_tab, text="Images Captured")
         self.tabControl.add(self.realtime_video_tab, text="Realtime Video")
 
-        self.tabControl.pack(expand=1, fill="both")
+        self.tabControl.pack(side=tk.LEFT, fill="both", expand=True)
+
 
         # Set the video source (you may need to change this)
         self.video_source = 0
@@ -107,7 +125,18 @@ class FaceApp:
         self.update()
         self.root.mainloop()
 
-
+    def switch_tab(self, event):
+        item = self.sidebar.selection()
+        if item:
+            tab_name = self.sidebar.item(item, "text")
+            if tab_name == "Logs":
+                self.tabControl.select(self.logs_tab)
+            elif tab_name == "Graphs":
+                self.tabControl.select(self.graphs_tab)
+            elif tab_name == "Images Captured":
+                self.tabControl.select(self.images_captured_tab)
+            elif tab_name == "Realtime Video":
+                self.tabControl.select(self.realtime_video_tab)
 
     def display_captured_images(self):
         # Get the list of image files in the "images_captured" folder
@@ -471,5 +500,7 @@ class FaceApp:
         if self.vid.isOpened():
             self.vid.release()
 
+# Create the root window and run the application
 root = tk.Tk()
 app = FaceApp(root)
+root.mainloop()
