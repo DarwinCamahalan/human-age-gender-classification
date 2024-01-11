@@ -47,7 +47,6 @@ class FaceApp:
 
         self.tabControl.pack(side=tk.LEFT, fill="both", expand=True)
 
-
         # Set the video source (you may need to change this)
         self.video_source = 0
         self.vid = cv2.VideoCapture(self.video_source)
@@ -68,9 +67,6 @@ class FaceApp:
 
         # Place the canvas in the middle, taking into account the canvas size
         self.canvas_realtime_video.place(x=x, y=y)
-
-
-
 
         self.faceProto = "opencv_face_detector.pbtxt"
         self.faceModel = "opencv_face_detector_uint8.pb"
@@ -197,19 +193,6 @@ class FaceApp:
         # Update canvas size to fit the layout
         self.canvas_images_captured.config(width=canvas_width, height=canvas_height)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     def prev_page(self):
         # Move to the previous page
         self.current_page = max(self.current_page - 1, 0)
@@ -220,8 +203,6 @@ class FaceApp:
         self.current_page = min(self.current_page + 1, self.total_pages - 1)
         self.display_captured_images()
 
-
-    
     def capture(self):
         ret, frame = self.vid.read()
         if ret:
@@ -357,7 +338,6 @@ class FaceApp:
 
             tk.Label(self.graphs_tab, text="Error reading or no data in JSON file", relief='ridge', width=20).pack(side=tk.LEFT)
 
-    
     def clear_graphs_tab(self):
         # Clear all widgets in the graphs_tab
         for widget in self.graphs_tab.winfo_children():
@@ -365,8 +345,6 @@ class FaceApp:
 
         # Close any existing figures
         plt.close('all')
-        
-        
         
     def update(self):
         # Set canvas dimensions
@@ -441,8 +419,6 @@ class FaceApp:
 
         self.root.after(10, self.update)
 
-
-
     def display_logs_realtime(self):
         # Clear existing data from the TreeView
         for item in self.log_tree.get_children():
@@ -494,7 +470,6 @@ class FaceApp:
             self.sort_column = column
         else:
             print(f"Ignore sorting for the column: {column}")
-
 
     def __del__(self):
         if self.vid.isOpened():
