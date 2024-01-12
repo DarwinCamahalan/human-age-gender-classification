@@ -113,7 +113,7 @@ class RealtimeVideoTab(tk.Frame):
                 # Save the image
                 age_gender = f"{age}_{gender}"
                 image_number = len(os.listdir(output_folder)) + 1
-                image_filename = f"{age_gender}_{image_number}_{current_time.strftime('%Y%m%d%H%M%S')}.png"
+                image_filename = f"{age_gender}_{image_number}.png"
                 image_path = os.path.join(output_folder, image_filename)
 
                 # Save the image without converting to RGB
