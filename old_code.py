@@ -98,7 +98,7 @@ class FaceApp:
         self.total_pages = 1  # Initialize with 1, update later in the method
 
         # Create the output folder if it doesn't exist
-        os.makedirs("images_captured", exist_ok=True)
+        os.makedirs("captured_images", exist_ok=True)
 
         # Open the JSON file for writing in append mode
         self.json_file = "log.json"
@@ -135,8 +135,8 @@ class FaceApp:
                 self.tabControl.select(self.realtime_video_tab)
 
     def display_captured_images(self):
-        # Get the list of image files in the "images_captured" folder
-        image_folder = "images_captured"
+        # Get the list of image files in the "captured_images" folder
+        image_folder = "captured_images"
         image_files = [f for f in os.listdir(image_folder) if f.endswith(".png")]
 
         # Clear the Canvas
@@ -237,7 +237,7 @@ class FaceApp:
                 date_str = now.strftime("%m/%d/%Y")
                 time_str = now.strftime("%I:%M %p")
                 image_name = f"captured_{i}_{now.strftime('%Y%m%d%H%M%S')}.png"
-                image_path = os.path.join("images_captured", image_name)
+                image_path = os.path.join("captured_images", image_name)
                 cv2.imwrite(image_path, frame)
 
                 # Log to JSON file

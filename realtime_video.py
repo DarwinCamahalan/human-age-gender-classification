@@ -41,7 +41,7 @@ class RealtimeVideoTab(tk.Frame):
 
     def start_video_stream(self):
         # Create the output folder if it doesn't exist
-        output_folder = "images_captured"
+        output_folder = "captured_images"
         os.makedirs(output_folder, exist_ok=True)
 
         faceProto = "opencv_face_detector.pbtxt"
