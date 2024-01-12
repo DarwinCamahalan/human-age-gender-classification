@@ -70,80 +70,91 @@ class RealtimeVideoTab(tk.Frame):
 
             ret, frame = video.read()
             frame = cv2.flip(frame, 1)  # Horizontal flip
+
+            # Detect faces
             frame, bboxs = self.face_box(faceNet, frame)
 
-            # Display the live video with labels
-            for bbox in bboxs:
-                face = frame[max(0, bbox[1] - padding):min(bbox[3] + padding, frame.shape[0] - 1),
-                       max(0, bbox[0] - padding):min(bbox[2] + padding, frame.shape[1] - 1)]
+            # Check if faces are detected
+            if bboxs:
+                # Display the live video with labels
+                for bbox in bboxs:
+                    face = frame[max(0, bbox[1] - padding):min(bbox[3] + padding, frame.shape[0] - 1),
+                           max(0, bbox[0] - padding):min(bbox[2] + padding, frame.shape[1] - 1)]
 
-                blob = cv2.dnn.blobFromImage(face, 1.0, (227, 227), MODEL_MEAN_VALUES, swapRB=False)
-                genderNet.setInput(blob)
-                genderPred = genderNet.forward()
-                gender = genderList[genderPred[0].argmax()]
+                    blob = cv2.dnn.blobFromImage(face, 1.0, (227, 227), MODEL_MEAN_VALUES, swapRB=False)
+                    genderNet.setInput(blob)
+                    genderPred = genderNet.forward()
+                    gender = genderList[genderPred[0].argmax()]
 
-                ageNet.setInput(blob)
-                agePred = ageNet.forward()
-                age = ageList[agePred[0].argmax()]
+                    ageNet.setInput(blob)
+                    agePred = ageNet.forward()
+                    age = ageList[agePred[0].argmax()]
 
-                label_gender = "Gender: {}".format(gender)
-                label_age = "Age: {}".format(age)
+                    label_gender = "Gender: {}".format(gender)
+                    label_age = "Age: {}".format(age)
 
-                text_size_gender = cv2.getTextSize(label_gender, cv2.FONT_HERSHEY_DUPLEX, 0.6, 1)[0]
-                text_size_age = cv2.getTextSize(label_age, cv2.FONT_HERSHEY_DUPLEX, 0.6, 1)[0]
+                    text_size_gender = cv2.getTextSize(label_gender, cv2.FONT_HERSHEY_DUPLEX, 0.6, 1)[0]
+                    text_size_age = cv2.getTextSize(label_age, cv2.FONT_HERSHEY_DUPLEX, 0.6, 1)[0]
 
-                cv2.putText(frame, label_gender, (bbox[0], bbox[3] + text_size_gender[1] + line_margin),
-                            cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
-                cv2.putText(frame, label_age, (bbox[0], bbox[3] + text_size_gender[1] + text_size_age[1] + 2 * line_margin),
-                            cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
+                    cv2.putText(frame, label_gender, (bbox[0], bbox[3] + text_size_gender[1] + line_margin),
+                                cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
+                    cv2.putText(frame, label_age, (bbox[0], bbox[3] + text_size_gender[1] + text_size_age[1] + 2 * line_margin),
+                                cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
 
-            # Convert the frame to RGB format for display in tkinter
-            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            img = Image.fromarray(rgb_frame)
-            img = ImageTk.PhotoImage(image=img)
+                # Convert the frame to RGB format for display in tkinter
+                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                img = Image.fromarray(rgb_frame)
+                img = ImageTk.PhotoImage(image=img)
 
-            # Update the canvas with the new frame
-            self.canvas.create_image(0, 0, anchor=tk.NW, image=img)
-            self.canvas.image = img  # Keep a reference to prevent garbage collection
+                # Update the canvas with the new frame
+                self.canvas.create_image(0, 0, anchor=tk.NW, image=img)
+                self.canvas.image = img  # Keep a reference to prevent garbage collection
 
-            # Check if it's time to capture an image
-            current_time = datetime.now()
-            time_difference = current_time - RealtimeVideoTab.last_capture_time
-            if time_difference.total_seconds() >= RealtimeVideoTab.capture_interval:
-                # Save the image
-                age_gender = f"{age}_{gender}"
-                image_number = len(os.listdir(output_folder)) + 1
-                image_filename = f"{age_gender}_{image_number}.png"
-                image_path = os.path.join(output_folder, image_filename)
+                # Check if it's time to capture an image
+                current_time = datetime.now()
+                time_difference = current_time - RealtimeVideoTab.last_capture_time
+                if time_difference.total_seconds() >= RealtimeVideoTab.capture_interval:
+                    # Save the image
+                    age_gender = f"{age}_{gender}"
+                    image_number = len(os.listdir(output_folder)) + 1
+                    image_filename = f"{age_gender}_{image_number}.png"
+                    image_path = os.path.join(output_folder, image_filename)
 
-                # Save the image without converting to RGB
-                cv2.imwrite(image_path, frame)
-                print(f"Image captured and saved: {image_path}")
+                    # Save the image without converting to RGB
+                    cv2.imwrite(image_path, frame)
+                    print(f"Image captured and saved: {image_path}")
 
-                # Log the data to log.json
-                log_data = {
-                    "Date": current_time.strftime('%Y-%m-%d'),
-                    "Time": current_time.strftime('%H:%M:%S'),
-                    "Gender": gender,
-                    "Age": age,
-                    "Image Captured Filename": image_filename
-                }
+                    # Log the data to log.json
+                    log_data = {
+                        "Date": current_time.strftime('%Y-%m-%d'),
+                        "Time": current_time.strftime('%H:%M:%S'),
+                        "Gender": gender,
+                        "Age": age,
+                        "Image Captured Filename": image_filename
+                    }
 
-                log_json_path = "log.json"
-                try:
-                    with open(log_json_path, 'r') as log_file:
-                        log_json = json.load(log_file)
-                except json.decoder.JSONDecodeError:
-                    # Handle the case where the file is empty or improperly formatted
-                    log_json = []
+                    log_json_path = "log.json"
+                    try:
+                        with open(log_json_path, 'r') as log_file:
+                            log_json = json.load(log_file)
+                    except json.decoder.JSONDecodeError:
+                        # Handle the case where the file is empty or improperly formatted
+                        log_json = []
 
-                log_json.append(log_data)
+                    log_json.append(log_data)
 
-                with open(log_json_path, 'w') as log_file:
-                    json.dump(log_json, log_file, indent=4)
+                    with open(log_json_path, 'w') as log_file:
+                        json.dump(log_json, log_file, indent=4)
 
-                RealtimeVideoTab.last_capture_time = current_time
+                    RealtimeVideoTab.last_capture_time = current_time
+            else:
+                # No faces detected, update the canvas without processing and displaying faces
+                img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                img = ImageTk.PhotoImage(image=img)
 
+                # Update the canvas with the new frame
+                self.canvas.create_image(0, 0, anchor=tk.NW, image=img)
+                self.canvas.image = img  # Keep a reference to prevent garbage collection
 
             # Call the update_frame function after 10 milliseconds
             self.after(10, update_frame)
