@@ -114,10 +114,11 @@ class RealtimeVideoTab(tk.Frame):
                 current_time = datetime.now()
                 time_difference = current_time - RealtimeVideoTab.last_capture_time
                 if time_difference.total_seconds() >= RealtimeVideoTab.capture_interval:
-                    # Save the image
-                    age_gender = f"{age}_{gender}"
+                    # Save the image with a timestamp in the filename
+                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+                    age_gender_timestamp = f"{age}_{gender}_{timestamp}"
                     image_number = len(os.listdir(output_folder)) + 1
-                    image_filename = f"{age_gender}_{image_number}.png"
+                    image_filename = f"{age_gender_timestamp}_{image_number}.png"
                     image_path = os.path.join(output_folder, image_filename)
 
                     # Save the image without converting to RGB

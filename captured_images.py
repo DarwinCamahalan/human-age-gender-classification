@@ -1,4 +1,6 @@
 import os
+import json
+from datetime import datetime
 from PIL import Image, ImageTk
 import tkinter as tk
 from tkinter import ttk
@@ -8,7 +10,7 @@ class CapturedImagesTab(tk.Frame):
         super().__init__(master, *args, **kwargs)
         self.images_folder = "captured_images"  # Change this to your actual folder path
         self.current_page = 1
-        self.items_per_page = 25  # 5x5 grid
+        self.items_per_page = 20  # 4x5 grid
 
         self.load_images()
         self.create_widgets()
@@ -68,21 +70,44 @@ class CapturedImagesTab(tk.Frame):
                 image = image.resize((200, 200))  # Adjust the size as needed
 
                 photo = ImageTk.PhotoImage(image)
-                label = tk.Label(inner_frame, image=photo)
-                label.image = photo
+                card_frame = tk.Frame(inner_frame, bg="white", highlightbackground="gray", highlightthickness=1)
 
-                row = (i - start_index) // 5
-                col = (i - start_index) % 5
+                label_image = tk.Label(card_frame, image=photo, bg="white")
+                label_image.image = photo
 
-                label.grid(row=row, column=col, padx=10, pady=(30, 2))
+                label_image.grid(row=0, column=0, sticky='nsew')
 
-                file_label = tk.Label(inner_frame, text=file_name, wraplength=180, justify=tk.CENTER)
-                file_label.grid(row=row + 1, column=col, pady=(0, 10), sticky='n')
+                # Display information from log.json
+                log_json_path = "log.json"
+                with open(log_json_path, 'r') as log_file:
+                    log_json = json.load(log_file)
+
+                for log_entry in log_json:
+                    if log_entry["Image Captured Filename"] == file_name:
+                        info_label_text = f"Date: {log_entry['Date']} \nTime: {log_entry['Time']} \nAge: {log_entry['Age']} \nGender: {log_entry['Gender']}"
+                        info_label = tk.Label(card_frame, text=info_label_text, wraplength=200, justify=tk.LEFT, bg="white")
+                        info_label.grid(row=1, column=0, pady=(5, 10), sticky='w')
+
+                        # Format date and time
+                        try:
+                            date_object = datetime.strptime(log_entry['Date'], '%Y-%m-%d')
+                            formatted_date = date_object.strftime('%m/%d/%Y')
+                            formatted_time = datetime.strptime(log_entry['Time'], '%H:%M:%S').strftime('%I:%M %p')
+                            info_label.config(text=f"Date: {formatted_date} \nTime: {formatted_time} \nAge: {log_entry['Age']} \nGender: {log_entry['Gender']}")
+                        except ValueError:
+                            print("Error formatting date or time")
+
+                card_frame.grid(row=(i - start_index) // 5, column=(i - start_index) % 5, padx=10, pady=10, sticky='nsew')
+
+        for row_num in range(inner_frame.grid_size()[1]):
+            inner_frame.grid_rowconfigure(row_num, weight=1)
+
+        for col_num in range(inner_frame.grid_size()[0]):
+            inner_frame.grid_columnconfigure(col_num, weight=1)
 
         canvas2.update_idletasks()
         canvas2.config(scrollregion=canvas2.bbox('all'))
 
-    # Your existing methods for pagination
     def show_prev_page(self):
         if self.current_page > 1:
             self.current_page -= 1
