@@ -1,8 +1,7 @@
 import os
-import re
 from PIL import Image, ImageTk
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 
 class CapturedImagesTab(tk.Frame):
     def __init__(self, master, *args, **kwargs):
@@ -57,8 +56,8 @@ class CapturedImagesTab(tk.Frame):
         inner_frame = tk.Frame(canvas2, bg="white")
         canvas2.create_window((0, 0), window=inner_frame, anchor='nw')
 
-        # Bind the MouseWheel event to the inner frame
-        inner_frame.bind('<MouseWheel>', lambda e: canvas2.yview_scroll(int(-1 * (e.delta / 120)), "units"))
+        # Bind the MouseWheel event to the canvas
+        canvas2.bind_all("<MouseWheel>", lambda e: canvas2.yview_scroll(int(-1 * (e.delta / 120)), "units"))
 
         for i in range(start_index, end_index):
             if i < len(self.image_paths):
@@ -80,11 +79,6 @@ class CapturedImagesTab(tk.Frame):
                 file_label = tk.Label(inner_frame, text=file_name, wraplength=180, justify=tk.CENTER)
                 file_label.grid(row=row + 1, column=col, pady=(0, 10), sticky='n')
 
-                # Bind the delete_image function to the label click event
-                label.bind("<Button-1>", lambda e, path=image_path: self.delete_image(path))
-                label.bind("<Enter>", lambda e, label=label, path=image_path: self.hover_in(e, label, path))
-                label.bind("<Leave>", lambda e, label=label, path=image_path: self.hover_out(e, label, path))
-
         canvas2.update_idletasks()
         canvas2.config(scrollregion=canvas2.bbox('all'))
 
@@ -105,18 +99,7 @@ class CapturedImagesTab(tk.Frame):
         for widget in self.image_frame.winfo_children():
             widget.destroy()
 
-    # Your existing methods for image interactions
-    def delete_image(self, image_path):
-        result = messagebox.askquestion("Delete Image", "Are you sure you want to delete this image?")
-        if result == 'yes':
-            os.remove(image_path)
-            # Update the image display after deletion
-            self.show_images()
-
-    def hover_in(self, event, image_label, image_path):
-        event.widget.config(cursor="hand2")
-        event.widget.config(borderwidth=2, relief="solid", bd=1, fg="#880808", highlightbackground="#880808")
-
-    def hover_out(self, event, image_label, image_path):
-        event.widget.config(cursor="")
-        event.widget.config(borderwidth=0)
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = CapturedImagesTab(root)
+    root.mainloop()
