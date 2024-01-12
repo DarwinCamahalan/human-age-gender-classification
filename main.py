@@ -1,4 +1,5 @@
 import tkinter as tk
+import json
 from logs import LogsTab
 from graphs import GraphsTab
 from captured_images import CapturedImagesTab

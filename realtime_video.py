@@ -2,9 +2,14 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import cv2
 import os
-from datetime import datetime
+import json
+from datetime import datetime, timedelta
 
 class RealtimeVideoTab(tk.Frame):
+    # Initialize last_capture_time and capture_interval at the class level
+    last_capture_time = datetime.now()
+    capture_interval = 10
+
     def __init__(self, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         tk.Label(self, text="Realtime Video Tab Content", font=("Arial", 14)).pack(pady=20)
@@ -100,6 +105,45 @@ class RealtimeVideoTab(tk.Frame):
             # Update the canvas with the new frame
             self.canvas.create_image(0, 0, anchor=tk.NW, image=img)
             self.canvas.image = img  # Keep a reference to prevent garbage collection
+
+            # Check if it's time to capture an image
+            current_time = datetime.now()
+            time_difference = current_time - RealtimeVideoTab.last_capture_time
+            if time_difference.total_seconds() >= RealtimeVideoTab.capture_interval:
+                # Save the image
+                age_gender = f"{age}_{gender}"
+                image_number = len(os.listdir(output_folder)) + 1
+                image_filename = f"{age_gender}_{image_number}_{current_time.strftime('%Y%m%d%H%M%S')}.png"
+                image_path = os.path.join(output_folder, image_filename)
+
+                # Save the image without converting to RGB
+                cv2.imwrite(image_path, frame)
+                print(f"Image captured and saved: {image_path}")
+
+                # Log the data to log.json
+                log_data = {
+                    "Date": current_time.strftime('%Y-%m-%d'),
+                    "Time": current_time.strftime('%H:%M:%S'),
+                    "Gender": gender,
+                    "Age": age,
+                    "Image Captured Filename": image_filename
+                }
+
+                log_json_path = "log.json"
+                try:
+                    with open(log_json_path, 'r') as log_file:
+                        log_json = json.load(log_file)
+                except json.decoder.JSONDecodeError:
+                    # Handle the case where the file is empty or improperly formatted
+                    log_json = []
+
+                log_json.append(log_data)
+
+                with open(log_json_path, 'w') as log_file:
+                    json.dump(log_json, log_file, indent=4)
+
+                RealtimeVideoTab.last_capture_time = current_time
+
 
             # Call the update_frame function after 10 milliseconds
             self.after(10, update_frame)
