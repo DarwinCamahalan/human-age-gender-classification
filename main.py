@@ -15,7 +15,11 @@ class GUIApp:
         window_height = 768
         sidebar_width = int(window_width * 0.20)
 
-        self.master.geometry(f"{window_width}x{window_height}")
+       # Calculate the x and y coordinates for the top-center position
+        x_position = (self.master.winfo_screenwidth() - window_width) // 2
+        y_position = 0  # Top of the screen
+
+        self.master.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
 
         # Create a frame for the sidebar with a black background
         self.sidebar_frame = tk.Frame(self.master, width=sidebar_width, bg="black")

@@ -65,7 +65,7 @@ class RealtimeVideoTab(tk.Frame):
         padding = 20
         line_margin = 5
 
-        def update_frame():
+        def update_frame(genderNet, ageNet):
             nonlocal video, faceNet
 
             ret, frame = video.read()
@@ -157,10 +157,10 @@ class RealtimeVideoTab(tk.Frame):
                 self.canvas.image = img  # Keep a reference to prevent garbage collection
 
             # Call the update_frame function after 10 milliseconds
-            self.after(10, update_frame)
+            self.after(10, lambda: update_frame(genderNet, ageNet))
 
         # Start the update_frame function
-        update_frame()
+        update_frame(genderNet, ageNet)
 
 if __name__ == "__main__":
     root = tk.Tk()

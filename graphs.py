@@ -77,8 +77,7 @@ class GraphsTab(tk.Frame):
         except (json.JSONDecodeError, FileNotFoundError):
             # Clear previous widgets
             self.clear_graphs_tab()
-            # Display an error message label
-            tk.Label(self, text="Error decoding JSON. Check if the file is empty or not in a valid JSON format.", font=("Arial", 12), fg="red").pack(pady=10)
+            print("")
 
 
     def clear_graphs_tab(self):

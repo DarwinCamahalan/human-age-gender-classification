@@ -29,10 +29,14 @@ class LogsTab(tk.Frame):
         except FileNotFoundError:
             tk.Label(self, text="Log file not found.", font=("Arial", 12), fg="red").pack(pady=10)
         except JSONDecodeError:
-            tk.Label(self, text="Error decoding JSON. Check if the file is empty or not in a valid JSON format.", font=("Arial", 12), fg="red").pack(pady=10)
-
+            print("")
+            
     def populate_table(self, log_data):
-        # Insert data into the table with alternate row colors
+        # Insert data into the table with centered text alignment for all columns
+        for col in self.tree["columns"]:
+            self.tree.heading(col, anchor="center")
+            self.tree.column(col, anchor="center")
+
         for i, log_entry in enumerate(log_data):
             date_str = log_entry.get("Date", "")
             time_str = log_entry.get("Time", "")
@@ -49,6 +53,8 @@ class LogsTab(tk.Frame):
             age = log_entry.get("Age", "")
             image_filename = log_entry.get("Image Captured Filename", "")
             values = (formatted_date, formatted_time, gender, age, image_filename)
+            
+            # Centered text alignment for all columns
             tags = ("oddrow",) if i % 2 == 1 else ()
             self.tree.insert("", "end", values=values, tags=tags)
 
