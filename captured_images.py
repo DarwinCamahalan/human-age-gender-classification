@@ -19,6 +19,24 @@ class CapturedImagesTab(tk.Frame):
         self.image_paths = [os.path.join(self.images_folder, filename) for filename in os.listdir(self.images_folder)
                             if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif'))]
 
+        # Sort the image paths based on date and time from log.json
+        self.image_paths.sort(key=lambda path: self.get_datetime_from_log(path), reverse=False)
+
+    def get_datetime_from_log(self, path):
+        file_name = os.path.basename(path)
+
+        log_json_path = "log.json"
+        with open(log_json_path, 'r') as log_file:
+            log_json = json.load(log_file)
+
+        for log_entry in log_json:
+            if log_entry["Image Captured Filename"] == file_name:
+                date_object = datetime.strptime(log_entry['Date'], '%Y-%m-%d')
+                formatted_time = datetime.strptime(log_entry['Time'], '%H:%M:%S').strftime('%I:%M %p')
+                return datetime.combine(date_object, datetime.strptime(formatted_time, '%I:%M %p').time())
+
+        return datetime.min  # Return a default value (minimum datetime) in case of an error
+
     def create_widgets(self):
         # Your existing code to create the image frame
         self.image_frame = tk.Frame(self, bg="white")
@@ -84,18 +102,18 @@ class CapturedImagesTab(tk.Frame):
 
                 for log_entry in log_json:
                     if log_entry["Image Captured Filename"] == file_name:
-                        info_label_text = f"Date: {log_entry['Date']} \nTime: {log_entry['Time']} \nAge: {log_entry['Age']} \nGender: {log_entry['Gender']}"
+                        date_object = datetime.strptime(log_entry['Date'], '%Y-%m-%d')
+                        formatted_date = date_object.strftime('%m/%d/%Y')
+                        formatted_time = datetime.strptime(log_entry['Time'], '%H:%M:%S').strftime('%I:%M %p')
+                        info_label_text = f"Date: {formatted_date} \nTime: {formatted_time}"
+
                         info_label = tk.Label(card_frame, text=info_label_text, wraplength=200, justify=tk.LEFT, bg="white")
                         info_label.grid(row=1, column=0, pady=(5, 10), sticky='w')
 
-                        # Format date and time
-                        try:
-                            date_object = datetime.strptime(log_entry['Date'], '%Y-%m-%d')
-                            formatted_date = date_object.strftime('%m/%d/%Y')
-                            formatted_time = datetime.strptime(log_entry['Time'], '%H:%M:%S').strftime('%I:%M %p')
-                            info_label.config(text=f"Date: {formatted_date} \nTime: {formatted_time} \nAge: {log_entry['Age']} \nGender: {log_entry['Gender']}")
-                        except ValueError:
-                            print("Error formatting date or time")
+                        # Update the label configuration with the new text
+                        info_label.config(text=f"Date: {formatted_date} \nTime: {formatted_time}")
+
+                        break  # Break out of the loop once information is found
 
                 card_frame.grid(row=(i - start_index) // 5, column=(i - start_index) % 5, padx=10, pady=10, sticky='nsew')
 

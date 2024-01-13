@@ -125,6 +125,7 @@ class GraphsTab(tk.Frame):
         for widget in self.winfo_children():
             if isinstance(widget, tk.Label) and widget.cget("text") == "No data available for graphs":
                 widget.destroy()
+                
 
     def display_bar_graph(self, age_data, gender_data):
         # Create the figure for both bar charts
@@ -153,30 +154,36 @@ class GraphsTab(tk.Frame):
 
         # Update the age range bar chart data
         self.age_ax.clear()
-        age_percentages = [count / sum(age_counts.values()) * 100 for count in age_counts.values()]
+        age_quantities = [age_counts[age] for age in self.ageList]  # Use counts directly as quantities
         age_bars = self.age_ax.bar(
-            self.ageList, age_percentages, color=[age_colors[age] for age in self.ageList]
+            self.ageList, age_quantities, color=[age_colors[age] for age in self.ageList]
         )
-        self.age_ax.set_title("Age Range Percentage")
-        self.age_ax.set_ylabel("Percentage")
+        self.age_ax.set_title("Age Range Quantity")
+        self.age_ax.set_ylabel("Quantity")
         self.age_ax.set_xlabel("Age Range")
-        self.age_ax.yaxis.set_major_formatter(PercentFormatter(1, decimals=0))  # Format y-axis as percentage from 0% to 100%
+
+        # Set y-axis lower limit to a non-negative value
+        self.age_ax.set_ylim(bottom=0)
 
         # Rotate x-axis labels to avoid overlapping
         self.age_ax.tick_params(axis='x', rotation=45)
 
-        # Add a legend for age ranges
-        self.age_ax.legend(age_bars, self.ageList, title="Age Range")
+        # Add data labels on top of each bar with absolute values
+        for bar, count in zip(age_bars, age_quantities):
+            self.age_ax.text(bar.get_x() + bar.get_width() / 2, abs(bar.get_height()), str(count), ha='center', va='bottom')
 
         # Update the gender bar chart data
         self.gender_ax.clear()
-        gender_percentages = [count / sum(gender_counts.values()) * 100 for count in gender_counts.values()]
+        gender_quantities = [gender_counts[gender] for gender in self.genderList]  # Use counts directly as quantities
         colors = ['#038cfc', '#f803fc']  # Set colors for male and female
-        self.gender_ax.bar(self.genderList, gender_percentages, color=colors)
-        self.gender_ax.set_title("Gender Percentage")
-        self.gender_ax.set_ylabel("Percentage")
+        self.gender_ax.bar(self.genderList, gender_quantities, color=colors)
+        self.gender_ax.set_title("Gender Quantity")
+        self.gender_ax.set_ylabel("Quantity")
         self.gender_ax.set_xlabel("Gender")
-        self.gender_ax.yaxis.set_major_formatter(PercentFormatter(1, decimals=0))  # Format y-axis as percentage from 0% to 100%
+
+        # Add data labels on top of each bar with absolute values
+        for bar, count in zip(self.gender_ax.patches, gender_quantities):
+            self.gender_ax.text(bar.get_x() + bar.get_width() / 2, abs(bar.get_height()), str(count), ha='center', va='bottom')
 
         # Update the display
         self.canvas.draw()
@@ -185,6 +192,10 @@ class GraphsTab(tk.Frame):
         for widget in self.winfo_children():
             if isinstance(widget, tk.Label) and widget.cget("text") == "No data available for graphs":
                 widget.destroy()
+
+
+
+
 
     def clear_graphs_tab(self):
         # Clear the graphs in the tab
