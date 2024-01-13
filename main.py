@@ -1,4 +1,5 @@
 import tkinter as tk
+from PIL import Image, ImageTk
 import json
 from logs import LogsTab
 from graphs import GraphsTab
@@ -10,6 +11,11 @@ class GUIApp:
         self.master = master
         self.master.title("Human Age & Gender Classification")
 
+         # Set the window icon
+        icon_path = "icon.ico"
+        icon_image = ImageTk.PhotoImage(Image.open(icon_path))
+        self.master.iconphoto(True, icon_image)       
+        
         # Set the width of the sidebar to 40% of the window size
         window_width = 1366
         window_height = 768
