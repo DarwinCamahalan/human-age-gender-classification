@@ -12,7 +12,8 @@ class RealtimeVideoTab(tk.Frame):
 
     def __init__(self, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
-        tk.Label(self, text="Realtime Video Tab Content", font=("Arial", 14)).pack(pady=20)
+        tk.Label(self, text="Live Video Capture", font=("Arial", 14), background="#FFFFFF").pack(pady=20)
+
 
         # Create a canvas for displaying video
         self.canvas = tk.Canvas(self, width=640, height=480)
@@ -120,7 +121,7 @@ class RealtimeVideoTab(tk.Frame):
                     image_filename = f"{age_gender_timestamp}_{image_number}.png"
                     image_path = os.path.join(output_folder, image_filename)
 
-                    # Apply blur to the face region only for captured images
+                    # Apply blur only inside the red facebox
                     for bbox in bboxs:
                         face = frame[max(0, bbox[1] - padding):min(bbox[3] + padding, frame.shape[0] - 1),
                                 max(0, bbox[0] - padding):min(bbox[2] + padding, frame.shape[1] - 1)]
@@ -128,13 +129,20 @@ class RealtimeVideoTab(tk.Frame):
                         # Apply Gaussian blur to the face region
                         blurred_face = cv2.GaussianBlur(face, (99, 99), 30)
 
-                        # Replace the face region with the blurred face
+                        # Replace the face region with the blurred face in the saved image
                         frame[max(0, bbox[1] - padding):min(bbox[3] + padding, frame.shape[0] - 1),
                             max(0, bbox[0] - padding):min(bbox[2] + padding, frame.shape[1] - 1)] = blurred_face
 
-                    # Save the image without converting to RGB
+                        # Draw the red facebox and labels on the saved image
+                        cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), 2)
+                        cv2.putText(frame, label_gender, (bbox[0], bbox[3] + text_size_gender[1] + line_margin),
+                                    cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
+                        cv2.putText(frame, label_age, (bbox[0], bbox[3] + text_size_gender[1] + text_size_age[1] + 2 * line_margin),
+                                    cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
+
+                    # Save the image with blur applied
                     cv2.imwrite(image_path, frame)
-                    print(f"Image captured and saved: {image_path}")
+                    print(f"Blurred Image captured and saved: {image_path}")
 
                     # Log the data to log.json
                     log_data = {
