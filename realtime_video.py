@@ -110,7 +110,6 @@ class RealtimeVideoTab(tk.Frame):
                 self.canvas.create_image(0, 0, anchor=tk.NW, image=img)
                 self.canvas.image = img  # Keep a reference to prevent garbage collection
 
-                # Check if it's time to capture an image
                 current_time = datetime.now()
                 time_difference = current_time - RealtimeVideoTab.last_capture_time
                 if time_difference.total_seconds() >= RealtimeVideoTab.capture_interval:
@@ -120,6 +119,18 @@ class RealtimeVideoTab(tk.Frame):
                     image_number = len(os.listdir(output_folder)) + 1
                     image_filename = f"{age_gender_timestamp}_{image_number}.png"
                     image_path = os.path.join(output_folder, image_filename)
+
+                    # Apply blur to the face region only for captured images
+                    for bbox in bboxs:
+                        face = frame[max(0, bbox[1] - padding):min(bbox[3] + padding, frame.shape[0] - 1),
+                                max(0, bbox[0] - padding):min(bbox[2] + padding, frame.shape[1] - 1)]
+
+                        # Apply Gaussian blur to the face region
+                        blurred_face = cv2.GaussianBlur(face, (99, 99), 30)
+
+                        # Replace the face region with the blurred face
+                        frame[max(0, bbox[1] - padding):min(bbox[3] + padding, frame.shape[0] - 1),
+                            max(0, bbox[0] - padding):min(bbox[2] + padding, frame.shape[1] - 1)] = blurred_face
 
                     # Save the image without converting to RGB
                     cv2.imwrite(image_path, frame)
