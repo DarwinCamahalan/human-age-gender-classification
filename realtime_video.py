@@ -14,13 +14,36 @@ class RealtimeVideoTab(tk.Frame):
         super().__init__(master, *args, **kwargs)
         tk.Label(self, text="Live Video Capture", font=("Arial", 14), background="#FFFFFF").pack(pady=20)
 
-
         # Create a canvas for displaying video
         self.canvas = tk.Canvas(self, width=640, height=480)
         self.canvas.pack()
 
+        # Create a label for the notification
+        self.notification_label = tk.Label(self, text="", font=("Arial", 13), bg="#048a01", fg="white", padx=17, pady=10)
+        self.notification_label.place(relx=0.5, rely=0.1, anchor='center')
+
         # Initialize video streaming
         self.start_video_stream()
+
+    def show_notification(self, message, border_color=None):
+        # Set the label text and position
+        self.notification_label.config(text=message)
+        self.notification_label.place(relx=0.5, rely=0.1, anchor='center')
+
+        # Change the border color of the canvas if specified
+        if border_color:
+            self.canvas.config(highlightbackground=border_color)
+
+        # Schedule the hide_notification method to be called after a delay (e.g., 2000 milliseconds or 2 seconds)
+        self.after(2000, lambda: self.hide_notification(border_color))
+
+    def hide_notification(self, border_color=None):
+        # Hide the label
+        self.notification_label.place_forget()
+
+        # Revert the border color of the canvas if specified
+        if border_color:
+            self.canvas.config(highlightbackground=border_color)
 
     def face_box(self, face_net, frame):
         frameWidth = frame.shape[1]
@@ -167,6 +190,9 @@ class RealtimeVideoTab(tk.Frame):
                         json.dump(log_json, log_file, indent=4)
 
                     RealtimeVideoTab.last_capture_time = current_time
+                    # Show the notification label without fade-in and fade-out animation
+                    self.show_notification("Image captured successfully")
+
             else:
                 # No faces detected, update the canvas without processing and displaying faces
                 img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
