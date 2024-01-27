@@ -19,6 +19,7 @@ class GraphsTab(tk.Frame):
 
         # Variable to store the selected date
         self.selected_date = tk.StringVar()
+        self.selected_date.set("All")  # Default selected date
 
         # Display graphs automatically
         self.create_widgets()
@@ -35,9 +36,9 @@ class GraphsTab(tk.Frame):
                 available_dates = [entry.get("Date", "") for entry in data if entry.get("Date")]
                 unique_dates = sorted(set(available_dates))
 
-                # Set the selected date to the oldest date with data
-                if unique_dates:
-                    self.selected_date.set(unique_dates[0])
+                # Set the selected date to "All" if no unique dates are available
+                if not unique_dates:
+                    self.selected_date.set("All")
 
         except (json.JSONDecodeError, FileNotFoundError):
             pass  # Handle file not found or invalid JSON
@@ -134,7 +135,6 @@ class GraphsTab(tk.Frame):
         # Count the occurrences of each age range and gender
         age_counts = {age_range: age_data.count(age_range) for age_range in self.ageList}
         gender_counts = {gender: gender_data.count(gender) for gender in self.genderList}
-
 
         # Create a color map for age ranges
         age_colors = {

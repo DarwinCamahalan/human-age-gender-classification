@@ -18,9 +18,10 @@ class RealtimeVideoTab(tk.Frame):
         self.canvas = tk.Canvas(self, width=640, height=480)
         self.canvas.pack()
 
-        # Create a label for the notification
-        self.notification_label = tk.Label(self, text="", font=("Arial", 13), bg="#048a01", fg="white", padx=17, pady=10)
+        # Create a label for the notification with an initial text of "Initializing..."
+        self.notification_label = tk.Label(self, text="Initializing...", font=("Arial", 13), bg="#048a01", fg="white", padx=17, pady=10)
         self.notification_label.place(relx=0.5, rely=0.1, anchor='center')
+        self.notification_label.place_forget()  # Hide the label immediately
 
         # Initialize video streaming
         self.start_video_stream()
@@ -33,6 +34,10 @@ class RealtimeVideoTab(tk.Frame):
         # Change the border color of the canvas if specified
         if border_color:
             self.canvas.config(highlightbackground=border_color)
+
+        # Show the label only if it's hidden
+        if not self.notification_label.winfo_ismapped():
+            self.notification_label.lift()  # Bring the label to the front
 
         # Schedule the hide_notification method to be called after a delay (e.g., 2000 milliseconds or 2 seconds)
         self.after(2000, lambda: self.hide_notification(border_color))

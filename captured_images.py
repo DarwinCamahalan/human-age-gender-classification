@@ -99,19 +99,19 @@ class CapturedImagesTab(tk.Frame):
         scrollable_frame = tk.Frame(self.image_frame, bg="white")
         scrollable_frame.pack(fill=tk.BOTH, expand=True)
 
-        canvas2 = tk.Canvas(scrollable_frame, bg="white")
-        canvas2.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        canvas = tk.Canvas(scrollable_frame, bg="white")
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        scrollbar = tk.Scrollbar(scrollable_frame, orient=tk.VERTICAL, command=canvas2.yview)
+        scrollbar = tk.Scrollbar(scrollable_frame, orient=tk.VERTICAL, command=canvas.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        canvas2.configure(yscrollcommand=scrollbar.set)
-        canvas2.bind('<Configure>', lambda e: canvas2.configure(scrollregion=canvas2.bbox('all')))
-        inner_frame = tk.Frame(canvas2, bg="white")
-        canvas2.create_window((0, 0), window=inner_frame, anchor='nw')
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
+        inner_frame = tk.Frame(canvas, bg="white")
+        canvas.create_window((0, 0), window=inner_frame, anchor='nw')
 
         # Bind the MouseWheel event to the canvas
-        canvas2.bind_all("<MouseWheel>", lambda e: canvas2.yview_scroll(int(-1 * (e.delta / 120)), "units"))
+        canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
 
         for i in range(start_index, end_index):
             if i < len(self.image_paths):
@@ -160,8 +160,8 @@ class CapturedImagesTab(tk.Frame):
         for col_num in range(inner_frame.grid_size()[0]):
             inner_frame.grid_columnconfigure(col_num, weight=1)
 
-        canvas2.update_idletasks()
-        canvas2.config(scrollregion=canvas2.bbox('all'))
+        canvas.update_idletasks()
+        canvas.config(scrollregion=canvas.bbox('all'))
 
     def show_prev_page(self):
         if self.current_page > 1:
