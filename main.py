@@ -36,28 +36,28 @@ class GUIApp:
         sidebar_text_container.pack(side=tk.TOP, fill=tk.X)
 
         # Create labels for navigation in the sidebar with white text and black background
-        label_logs = tk.Label(sidebar_text_container, text="Logs", fg="white", bg="black", cursor="hand2", font=("Arial", 12))
-        label_logs.pack(pady=(50, 0), anchor='w', padx=40, fill='x')
-        label_logs.bind("<Button-1>", lambda event: self.show_logs())
+        label_realtime_video = tk.Label(sidebar_text_container, text="Realtime Video", fg="white", bg="black", cursor="hand2", font=("Arial", 12))
+        label_realtime_video.pack(pady=(40, 0), anchor='w', padx=40, fill='x')
+        label_realtime_video.bind("<Button-1>", lambda event: self.show_realtime_video())
+        
+        label_captured_images = tk.Label(sidebar_text_container, text="Captured Images", fg="white", bg="black", cursor="hand2", font=("Arial", 12))
+        label_captured_images.pack(pady=(40, 0), anchor='w', padx=40, fill='x')
+        label_captured_images.bind("<Button-1>", lambda event: self.show_captured_images())
 
         label_graphs = tk.Label(sidebar_text_container, text="Graphs", fg="white", bg="black", cursor="hand2", font=("Arial", 12))
         label_graphs.pack(pady=(40, 0), anchor='w', padx=40, fill='x')
         label_graphs.bind("<Button-1>", lambda event: self.show_graphs())
 
-        label_captured_images = tk.Label(sidebar_text_container, text="Captured Images", fg="white", bg="black", cursor="hand2", font=("Arial", 12))
-        label_captured_images.pack(pady=(40, 0), anchor='w', padx=40, fill='x')
-        label_captured_images.bind("<Button-1>", lambda event: self.show_captured_images())
-
-        label_realtime_video = tk.Label(sidebar_text_container, text="Realtime Video", fg="white", bg="black", cursor="hand2", font=("Arial", 12))
-        label_realtime_video.pack(pady=(40, 0), anchor='w', padx=40, fill='x')
-        label_realtime_video.bind("<Button-1>", lambda event: self.show_realtime_video())
+        label_logs = tk.Label(sidebar_text_container, text="Logs", fg="white", bg="black", cursor="hand2", font=("Arial", 12))
+        label_logs.pack(pady=(50, 0), anchor='w', padx=40, fill='x')
+        label_logs.bind("<Button-1>", lambda event: self.show_logs())
 
         # Create a frame for the main content area
         self.content_frame = tk.Frame(self.master, bg="white")
         self.content_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # Default tab is "Logs"
-        self.show_logs()
+        # Default tab is "Realtime Video"
+        self.show_realtime_video()
 
     def show_logs(self):
         self.content_frame.destroy()

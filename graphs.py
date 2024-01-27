@@ -1,8 +1,8 @@
 import tkinter as tk
+from tkinter import ttk
 import json
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.ticker import PercentFormatter
 
 class GraphsTab(tk.Frame):
     def __init__(self, master, *args, **kwargs):
@@ -17,9 +17,30 @@ class GraphsTab(tk.Frame):
         self.selected_graph_type = tk.StringVar()
         self.selected_graph_type.set("Pie Chart")  # Default selected graph type
 
+        # Variable to store the selected date
+        self.selected_date = tk.StringVar()
+
         # Display graphs automatically
         self.create_widgets()
+
+        # Set the selected date to the oldest date with data
+        self.set_initial_selected_date()
+
         self.display_graphs()
+
+    def set_initial_selected_date(self):
+        try:
+            with open(self.json_file) as jsonfile:
+                data = json.load(jsonfile)
+                available_dates = [entry.get("Date", "") for entry in data if entry.get("Date")]
+                unique_dates = sorted(set(available_dates))
+
+                # Set the selected date to the oldest date with data
+                if unique_dates:
+                    self.selected_date.set(unique_dates[0])
+
+        except (json.JSONDecodeError, FileNotFoundError):
+            pass  # Handle file not found or invalid JSON
 
     def create_widgets(self):
         # Create a label and text label for mimicking the select field
@@ -34,6 +55,12 @@ class GraphsTab(tk.Frame):
 
         # Add a binding to open a menu on label click
         label.bind("<Button-1>", lambda event: self.show_menu(event, label, label_text))
+
+        # Create a date picker using ttkcalendar
+        date_picker = ttk.Combobox(self, values=["All"] + self.get_unique_dates(), font=("Arial", 12), width=15)
+        date_picker.set("All")  # Default value
+        date_picker.pack(side=tk.TOP, anchor=tk.NW, padx=(10, 0), pady=(0, 20))  # Updated configuration
+        date_picker.bind("<<ComboboxSelected>>", self.update_date)
 
     def show_menu(self, event, label, label_text):
         # Create a menu
@@ -51,10 +78,27 @@ class GraphsTab(tk.Frame):
         self.selected_graph_type.set(value)
         self.display_graphs()
 
+    def update_date(self, event):
+        self.selected_date.set(event.widget.get())
+        self.display_graphs()
+
+    def get_unique_dates(self):
+        try:
+            with open(self.json_file) as jsonfile:
+                data = json.load(jsonfile)
+                dates = set(entry.get("Date", "") for entry in data)
+                return sorted(list(dates))
+        except (json.JSONDecodeError, FileNotFoundError):
+            return []
+
     def display_graphs(self, *args):
         try:
             with open(self.json_file) as jsonfile:
                 data = json.load(jsonfile)
+
+                # Filter data based on the selected date
+                if self.selected_date.get() != "All":
+                    data = [entry for entry in data if entry.get("Date") == self.selected_date.get()]
 
                 # Check if the data is a list of entries
                 if not isinstance(data, list):
@@ -68,12 +112,10 @@ class GraphsTab(tk.Frame):
                 age_data = [entry.get("Age", "") for entry in data]
                 gender_data = [entry.get("Gender", "") for entry in data]
 
+                # Display the graph based on the selected graph type
                 if self.selected_graph_type.get() == "Pie Chart":
-                    # Display Pie Chart
                     self.display_pie_chart(age_data, gender_data)
-
                 elif self.selected_graph_type.get() == "Bar Graph":
-                    # Display Bar Graph
                     self.display_bar_graph(age_data, gender_data)
 
         except (json.JSONDecodeError, FileNotFoundError):
@@ -93,6 +135,7 @@ class GraphsTab(tk.Frame):
         age_counts = {age_range: age_data.count(age_range) for age_range in self.ageList}
         gender_counts = {gender: gender_data.count(gender) for gender in self.genderList}
 
+
         # Create a color map for age ranges
         age_colors = {
             '11-15': '#adfc03',
@@ -108,14 +151,14 @@ class GraphsTab(tk.Frame):
 
         # Update the age range pie chart data
         self.age_ax.clear()
-        self.age_ax.pie(age_counts.values(), labels=age_counts.keys(), autopct='%1.1f%%', startangle=90, colors=[age_colors[age] for age in age_counts.keys()])
-        self.age_ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        self.age_ax.pie(age_counts.values(), labels=age_counts.keys(), autopct='%1.1f%%', startangle=90, colors=[age_colors.get(age, 'gray') for age in age_counts.keys()])
+        self.age_ax.axis('equal')  # Equal aspect ratio ensures that the pie is drawn as a circle.
         self.age_ax.set_title("Age Range Percentage")
 
         # Update the gender pie chart data
         self.gender_ax.clear()
         self.gender_ax.pie(gender_counts.values(), labels=self.genderList, autopct='%1.1f%%', startangle=90, colors=['#038cfc', '#f803fc'])
-        self.gender_ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        self.gender_ax.axis('equal')  # Equal aspect ratio ensures that the pie is drawn as a circle.
         self.gender_ax.set_title("Gender Percentage")
 
         # Update the display
@@ -125,7 +168,6 @@ class GraphsTab(tk.Frame):
         for widget in self.winfo_children():
             if isinstance(widget, tk.Label) and widget.cget("text") == "No data available for graphs":
                 widget.destroy()
-                
 
     def display_bar_graph(self, age_data, gender_data):
         # Create the figure for both bar charts
@@ -192,10 +234,6 @@ class GraphsTab(tk.Frame):
         for widget in self.winfo_children():
             if isinstance(widget, tk.Label) and widget.cget("text") == "No data available for graphs":
                 widget.destroy()
-
-
-
-
 
     def clear_graphs_tab(self):
         # Clear the graphs in the tab
