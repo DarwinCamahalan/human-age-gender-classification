@@ -244,6 +244,10 @@ class GraphsTab(tk.Frame):
             if isinstance(widget, tk.Label) and widget.cget("text") == "No data available for graphs":
                 widget.destroy()
 
+
+
+
+
     def clear_graphs_tab(self):
         # Clear the graphs in the tab
         if hasattr(self, 'figure'):
