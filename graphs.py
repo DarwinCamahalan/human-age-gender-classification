@@ -206,7 +206,11 @@ class GraphsTab(tk.Frame):
 
         # Dynamically set y-axis lower limit based on the maximum value
         max_age_quantity = max(age_quantities)
-        self.age_ax.set_ylim(bottom=0, top=max_age_quantity + 1)  # Add a small margin
+        threshold = 5  # Threshold value for small data
+        if max_age_quantity <= threshold:
+            self.age_ax.set_ylim(bottom=0, top=max(threshold, max_age_quantity) + 1)  # Set lower limit to threshold or max_age_quantity, whichever is greater
+        else:
+            self.age_ax.set_ylim(bottom=0, top=max_age_quantity + 1)  # Add a small margin
 
         # Rotate x-axis labels to avoid overlapping
         self.age_ax.tick_params(axis='x', rotation=45)
@@ -239,10 +243,6 @@ class GraphsTab(tk.Frame):
         for widget in self.winfo_children():
             if isinstance(widget, tk.Label) and widget.cget("text") == "No data available for graphs":
                 widget.destroy()
-
-
-
-
 
     def clear_graphs_tab(self):
         # Clear the graphs in the tab

@@ -278,5 +278,12 @@
         "Gender": "Male",
         "Age": "21-25",
         "Image Captured Filename": "21-25_Male_20240115184045_40.png"
+    },
+    {
+        "Date": "2024-03-21",
+        "Time": "20:31:20",
+        "Gender": "Male",
+        "Age": "36-40",
+        "Image Captured Filename": "36-40_Male_20240321203120_41.png"
     }
 ]
