@@ -196,36 +196,41 @@ class GraphsTab(tk.Frame):
 
         # Update the age range bar chart data
         self.age_ax.clear()
-        age_quantities = [age_counts[age] for age in self.ageList]  # Use counts directly as quantities
+        age_quantities = [age_counts.get(age, 0) for age in self.ageList]  # Use counts directly as quantities
         age_bars = self.age_ax.bar(
-            self.ageList, age_quantities, color=[age_colors[age] for age in self.ageList]
+            self.ageList, age_quantities, color=[age_colors.get(age, 'gray') for age in self.ageList]
         )
         self.age_ax.set_title("Age Range Quantity")
         self.age_ax.set_ylabel("Quantity")
         self.age_ax.set_xlabel("Age Range")
 
-        # Set y-axis lower limit to a non-negative value
-        self.age_ax.set_ylim(bottom=0)
+        # Dynamically set y-axis lower limit based on the maximum value
+        max_age_quantity = max(age_quantities)
+        self.age_ax.set_ylim(bottom=0, top=max_age_quantity + 1)  # Add a small margin
 
         # Rotate x-axis labels to avoid overlapping
         self.age_ax.tick_params(axis='x', rotation=45)
 
         # Add data labels on top of each bar with absolute values
         for bar, count in zip(age_bars, age_quantities):
-            self.age_ax.text(bar.get_x() + bar.get_width() / 2, abs(bar.get_height()), str(count), ha='center', va='bottom')
+            self.age_ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), str(count), ha='center', va='bottom')
 
         # Update the gender bar chart data
         self.gender_ax.clear()
-        gender_quantities = [gender_counts[gender] for gender in self.genderList]  # Use counts directly as quantities
+        gender_quantities = [gender_counts.get(gender, 0) for gender in self.genderList]  # Use counts directly as quantities
         colors = ['#038cfc', '#f803fc']  # Set colors for male and female
         self.gender_ax.bar(self.genderList, gender_quantities, color=colors)
         self.gender_ax.set_title("Gender Quantity")
         self.gender_ax.set_ylabel("Quantity")
         self.gender_ax.set_xlabel("Gender")
 
+        # Dynamically set y-axis lower limit based on the maximum value
+        max_gender_quantity = max(gender_quantities)
+        self.gender_ax.set_ylim(bottom=0, top=max_gender_quantity + 1)  # Add a small margin
+
         # Add data labels on top of each bar with absolute values
         for bar, count in zip(self.gender_ax.patches, gender_quantities):
-            self.gender_ax.text(bar.get_x() + bar.get_width() / 2, abs(bar.get_height()), str(count), ha='center', va='bottom')
+            self.gender_ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), str(count), ha='center', va='bottom')
 
         # Update the display
         self.canvas.draw()
@@ -234,6 +239,10 @@ class GraphsTab(tk.Frame):
         for widget in self.winfo_children():
             if isinstance(widget, tk.Label) and widget.cget("text") == "No data available for graphs":
                 widget.destroy()
+
+
+
+
 
     def clear_graphs_tab(self):
         # Clear the graphs in the tab
