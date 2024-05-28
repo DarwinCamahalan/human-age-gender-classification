@@ -5,7 +5,7 @@ A age and gender identifier machine learning desktop application for CCTV camera
 ### Age and Gender Classification
 ![test](https://github.com/DarwinCamahalan/human-age-gender-classification/assets/120079195/b3578838-47f2-4841-9f7b-b22a2e64d046)
 
-### Caotured Images
+### Captured Images
 ![1](https://github.com/DarwinCamahalan/human-age-gender-classification/assets/120079195/c2ddfff7-3d0a-40fb-8361-a9a9790ac87f)
 
 ### Graphs (Bar Graph & Pie Graph)
